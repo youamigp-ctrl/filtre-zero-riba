@@ -1,88 +1,14 @@
 symbole,nom,bourse,date_du_bilan
 AGNT,"AGNT, Inc.",Nasdaq,2026-06-30
-AGX,ARGAN INC,NYSE,2026-07-31
-ALIS,Calisa Acquisition Corp,Nasdaq,2026-06-30
-APRE,"Aprea Therapeutics, Inc.",Nasdaq,2026-06-30
-AVXL,ANAVEX LIFE SCIENCES CORP.,Nasdaq,2026-06-30
-BEATW,"HeartBeam, Inc.",Nasdaq,2026-06-30
-BMI,BADGER METER INC,NYSE,2026-09-30
-BMR,Beamr Imaging Ltd.,Nasdaq,2025-12-31
-BRTX,"BioRestorative Therapies, Inc.",Nasdaq,2026-03-31
-CAT,CATERPILLAR INC,NYSE,2026-06-30
-CBC,"Central Bancompany, Inc.",Nasdaq,2026-06-30
-CMMB,Chemomab Therapeutics Ltd.,Nasdaq,2025-12-31
 COYA,"Coya Therapeutics, Inc.",Nasdaq,2026-06-30
-CP,CANADIAN PACIFIC KANSAS CITY LTD/CN,NYSE,2026-06-30
-DCOY,Decoy Therapeutics Inc.,Nasdaq,2026-06-30
-DKI,DarkIris Inc.,Nasdaq,2025-09-30
-DMRA,"Damora Therapeutics, Inc.",Nasdaq,2026-06-30
-DSWL,DESWELL INDUSTRIES INC,Nasdaq,2026-03-31
-EDHL,Everbright Digital Holding Ltd.,Nasdaq,2025-12-31
-ENVB,"Enveric Biosciences, Inc.",Nasdaq,2026-06-30
-ESI,Element Solutions Inc,NYSE,2026-09-30
 ESLA,"Estrella Immunopharma, Inc.",Nasdaq,2026-06-30
-FLNA,"FILANA THERAPEUTICS, INC.",Nasdaq,2026-03-31
-GLND,Greenland Energy Co,Nasdaq,2026-06-30
-GM,General Motors Co,NYSE,2026-09-30
 GRAY.CN,Graycliff Exploration Limited,CSE,2026-06-30
-HCAC,Hall Chadwick Acquisition Corp,Nasdaq,2026-06-30
-HELP,Helus Pharma Inc.,Nasdaq,2025-03-31
-HQ,Horizon Quantum Holdings Ltd.,Nasdaq,2025-12-31
-IDN,"Intellicheck, Inc.",Nasdaq,2026-06-30
-IKT,"Inhibikase Therapeutics, Inc.",Nasdaq,2026-06-30
-IMVT,"Immunovant, Inc.",Nasdaq,2026-06-30
-INDP,"Indaptus Therapeutics, Inc.",Nasdaq,2026-06-30
-ISRG,INTUITIVE SURGICAL INC,Nasdaq,2026-09-30
-ITOC,iTonic Holdings Ltd,Nasdaq,2025-12-31
-JAGU,Jaguar Uranium Corp.,NYSE,2026-06-30
-JMKE,Jersey Mike's Subs Inc.,NYSE,2026-06-28
-KRSA,"Korsana Biosciences, Inc.",Nasdaq,2026-06-30
-LAC,LITHIUM AMERICAS CORP.,NYSE,2026-06-30
 LSTA,"LISATA THERAPEUTICS, INC.",Nasdaq,2026-06-30
-LTRX,LANTRONIX INC,Nasdaq,2026-06-30
 LUCY,Innovative Eyewear Inc,Nasdaq,2026-06-30
-MBLY,Mobileye Global Inc.,Nasdaq,2026-06-27
-MNST,Monster Beverage Corp,Nasdaq,2026-06-30
-MNTN,"MNTN, Inc.",NYSE,2026-06-30
-MSGY,Masonglory Ltd,Nasdaq,2026-03-31
-NBRG,Newbridge Acquisition Ltd,Nasdaq,2026-06-30
-NEWP,NEW PACIFIC METALS CORP,NYSE,2025-06-30
-NVCT,"Nuvectis Pharma, Inc.",Nasdaq,2026-06-30
-NXAT,Nexus Advanced Technologies Inc.,Nasdaq,2024-12-31
-ONTO,ONTO INNOVATION INC.,NYSE,2026-06-30
-PASG,"Passage BIO, Inc.",Nasdaq,2026-06-30
-PAYO,Payoneer Global Inc.,Nasdaq,2026-06-30
-PCAR,PACCAR INC,Nasdaq,2026-06-30
-PHOS,First Phosphate Corp.,Nasdaq,2024-02-29
-PLAB,PHOTRONICS INC,Nasdaq,2026-08-02
-PLRZ,Polyrizon Ltd.,Nasdaq,2025-12-31
-PLUS,EPLUS INC,Nasdaq,2026-06-30
+PHIO,Phio Pharmaceuticals Corp.,Nasdaq,2026-06-30
 PLYX,"Polaryx Therapeutics, Inc.",Nasdaq,2026-06-30
-PMN,ProMIS Neurosciences Inc.,Nasdaq,2026-06-30
-POWI,POWER INTEGRATIONS INC,Nasdaq,2026-06-30
-RKDA,"Arcadia Biosciences, Inc.",Nasdaq,2026-06-30
-RLYB,Rallybio Corp,Nasdaq,2026-06-30
-RNTX,"Rein Therapeutics, Inc.",Nasdaq,2026-06-30
 RSSS,"Research Solutions, Inc.",Nasdaq,2026-06-30
-RVII,Robinhood Ventures Fund II,NYSE,2026-06-30
-RYET,Ruanyun Edai Technology Inc.,Nasdaq,2026-03-31
-SD,SANDRIDGE ENERGY INC,NYSE,2026-06-30
-SLBT,SL Science Holding Ltd,Nasdaq,2025-12-31
-SMTK,"SmartKem, Inc.",Nasdaq,2026-06-30
-SSAC,SPACSphere Acquisition Corp.,Nasdaq,2026-06-30
-STKH,Steakholder Foods Ltd.,Nasdaq,2025-12-31
-SYRE,"Spyre Therapeutics, Inc.",Nasdaq,2026-06-30
 TCRT,"Alaunos Therapeutics, Inc.",Nasdaq,2026-06-30
-TENX,"TENAX THERAPEUTICS, INC.",Nasdaq,2026-06-30
-TLPH,"TALPHERA, INC.",Nasdaq,2026-06-30
-TOST,"Toast, Inc.",NYSE,2026-06-30
-TRN,TRINITY INDUSTRIES INC,NYSE,2026-06-30
 UG,UNITED GUARDIAN INC,Nasdaq,2026-06-30
-UTMD,UTAH MEDICAL PRODUCTS INC,Nasdaq,2026-06-30
-VZLA,Vizsla Silver Corp.,NYSE,2025-04-30
-WWR,"WESTWATER RESOURCES, INC.",NYSE,2026-06-30
-XBIT,XBiotech Inc.,Nasdaq,2026-06-30
 XLAB,Exascale Labs Holdings Inc.,Nasdaq,2026-06-30
-XPL,SOLITARIO RESOURCES CORP.,NYSE,2026-06-30
-XRTX,XORTX Therapeutics Inc.,Nasdaq,2021-12-31
 YARW,"Yarrow Bioscience, Inc.",Nasdaq,2026-06-30

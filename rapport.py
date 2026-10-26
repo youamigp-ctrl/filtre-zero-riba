@@ -104,7 +104,8 @@ def ecrire_rapport(resultats, chg, maintenant, date_prec, notes, cfg, dossier: P
              f"{'s' if analysees > 1 else ''} passe{'nt' if n['conforme'] > 1 else ''} le filtre.")
     notes_html = "".join(f"<li>{escape(x)}</li>" for x in notes)
     notes_html = f'<ul class="notes">{notes_html}</ul>' if notes else ""
-    pol = lambda k: "les excluent" if cfg.get(k) == "exclure" else "les signalent pour examen"
+    pol = lambda k: {"exclure": "les excluent", "ignorer": "admettent les loyers ordinaires et signalent le crédit-bail"}.get(
+        cfg.get(k), "les signalent pour examen")
     options = "".join(f'<option value="{b}">{b}</option>' for b in BOURSES)
 
     html = f"""<!doctype html>

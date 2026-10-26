@@ -55,17 +55,26 @@ def evaluer(d: dict, cfg: dict) -> dict:
     elif fdebt > dtol:
         exclu.append("Dette financière portant intérêt")
 
-    if leases > dtol:
-        (exclu if cfg.get("lease_policy") == "exclure" else examiner).append("Obligations locatives (baux)")
+    politique = cfg.get("lease_policy", "examiner")
+    credit_bail = d.get("finance_leases")  # connu seulement en normes américaines
+    if politique == "ignorer":
+        if credit_bail is not None and credit_bail > dtol:
+            examiner.append("Crédit-bail (location-financement)")
+    elif leases > dtol:
+        (exclu if politique == "exclure" else examiner).append("Obligations locatives (baux)")
 
     iexp = d.get("interest_expense")
     if iexp is not None and iexp > itol:
         # En IFRS, les intérêts sur baux sont comptés en charges financières ; en normes américaines,
         # le loyer d'un bail ordinaire n'est pas un intérêt. Et des intérêts supérieurs à 12 % du
         # montant des baux ne peuvent pas venir des seuls baux.
-        baux_plausibles = d.get("norme") != "us-gaap" and leases > 0 and iexp <= 0.12 * leases
+        # En normes américaines, seul le crédit-bail génère une charge d'intérêts.
+        base = (credit_bail or 0) if d.get("norme") == "us-gaap" else leases
+        baux_plausibles = base > 0 and iexp <= 0.12 * base
         if fdebt == 0 and baux_plausibles:
-            examiner.append("Intérêts versés, possiblement liés aux seuls baux")
+            if d.get("norme") == "us-gaap" or politique != "ignorer":
+                examiner.append("Intérêts versés, possiblement liés aux seuls baux")
+            # IFRS ou Yahoo avec baux ignorés : intérêt comptable implicite des loyers, sans prêteur
         else:
             exclu.append("Verse des intérêts")
 

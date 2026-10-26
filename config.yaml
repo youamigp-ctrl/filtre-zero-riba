@@ -87,6 +87,9 @@ debt_tolerance: 0
 interest_tolerance: 0
 #   "exclure"  : lecture stricte  —  "examiner" : vérification manuelle
 interest_income_policy: examiner
-lease_policy: examiner
+# Baux (loyers inscrits au bilan selon IFRS 16 / ASC 842) :
+#   "ignorer"  : loyers ordinaires admis (ijara) ; le crédit-bail reste signalé quand il est identifiable
+#   "examiner" : tous les baux signalés  —  "exclure" : tous les baux excluent
+lease_policy: ignorer
 # true : seules les sociétés rentables (bénéfice et flux de trésorerie positifs) peuvent être conformes
 exiger_rentabilite: false

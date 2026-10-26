@@ -62,6 +62,8 @@ DEBT_FLOWS = {
     "ifrs-full": ["ProceedsFromBorrowingsClassifiedAsFinancingActivities",
                   "RepaymentsOfBorrowingsClassifiedAsFinancingActivities"],
 }
+FIN_LEASES = {"us-gaap": ["FinanceLeaseLiability", "FinanceLeaseLiabilityNoncurrent", "FinanceLeaseLiabilityCurrent",
+                          "CapitalLeaseObligations", "CapitalLeaseObligationsNoncurrent", "CapitalLeaseObligationsCurrent"]}
 ASSETS = {"us-gaap": ["Assets"], "ifrs-full": ["Assets"]}
 CURRENCY = re.compile(r"^[A-Z]{3}$")
 
@@ -233,6 +235,7 @@ def extraire(cf: dict) -> dict:
         "net_income": _annuel_signe(facts, PROFIT, jour),
         "ocf": _annuel_signe(facts, OCF, jour),
         "leases": _instant(facts, LEASES, jour) or 0.0,
+        "finance_leases": (_instant(facts, FIN_LEASES, jour) or 0.0) if norme == "us-gaap" else None,
         "interest_expense": _periode(facts, INT_EXP, jour),
         "interest_income": _periode(facts, INT_INC, jour),
         "debt_flows": _periode(facts, DEBT_FLOWS, jour),

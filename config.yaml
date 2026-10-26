@@ -39,6 +39,8 @@ secteurs_listes_exclus:
   - Exchange Traded
   - SPAC
   - Capital Pool
+  - CPC          # sociétés de capital de démarrage (coquilles vides)
+  - CDR          # certificats de sociétés étrangères, couverts par des dérivés de change
   - Cannabis
 
 # Codes SIC américains exclus d'office (intervalles inclusifs)

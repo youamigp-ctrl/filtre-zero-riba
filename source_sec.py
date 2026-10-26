@@ -11,7 +11,7 @@ import os
 import re
 import time
 import zipfile
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import requests
@@ -26,10 +26,17 @@ DEBT = {
                 "ShortTermBorrowings", "CommercialPaper", "LineOfCredit", "LongTermLineOfCredit",
                 "ConvertibleNotesPayable", "ConvertibleNotesPayableCurrent", "ConvertibleDebtNoncurrent",
                 "NotesPayable", "NotesPayableCurrent", "LongTermNotesPayable", "SeniorNotes",
-                "SecuredDebt", "UnsecuredDebt", "OtherLongTermDebt", "OtherBorrowings"],
+                "SecuredDebt", "UnsecuredDebt", "OtherLongTermDebt", "OtherBorrowings",
+                "LongTermDebtAndCapitalLeaseObligations", "LongTermDebtAndCapitalLeaseObligationsCurrent",
+                "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities", "DebtAndCapitalLeaseObligations",
+                "DebtLongtermAndShorttermCombinedAmount", "LongTermDebtFairValue", "DebtInstrumentCarryingAmount",
+                "LinesOfCreditCurrent", "SecuredLongTermDebt", "UnsecuredLongTermDebt", "SeniorLongTermNotes",
+                "OtherNotesPayable", "OtherLongTermDebtNoncurrent", "ShortTermBankLoansAndNotesPayable",
+                "LoansPayable", "LoansPayableCurrent", "LongTermLoansPayable"],
     "ifrs-full": ["Borrowings", "CurrentBorrowingsAndCurrentPortionOfNoncurrentBorrowings",
                   "NoncurrentPortionOfNoncurrentBorrowings", "ShorttermBorrowings", "LongtermBorrowings",
-                  "BondsIssued", "NotesAndDebenturesIssued"],
+                  "BondsIssued", "NotesAndDebenturesIssued", "BankBorrowings", "LoansReceived",
+                  "OtherCurrentBorrowingsAndCurrentPortionOfOtherNoncurrentBorrowings"],
 }
 LEASES = {
     "us-gaap": ["OperatingLeaseLiability", "FinanceLeaseLiability", "OperatingLeaseLiabilityNoncurrent",
@@ -37,13 +44,23 @@ LEASES = {
     "ifrs-full": ["LeaseLiabilities", "NoncurrentLeaseLiabilities", "CurrentLeaseLiabilities"],
 }
 INT_EXP = {
-    "us-gaap": ["InterestExpense", "InterestExpenseDebt", "InterestExpenseNonoperating", "InterestExpenseBorrowings"],
+    "us-gaap": ["InterestExpense", "InterestExpenseDebt", "InterestExpenseNonoperating", "InterestExpenseBorrowings",
+                "InterestPaid", "InterestPaidNet", "InterestCostsIncurred"],
     "ifrs-full": ["InterestExpense", "FinanceCosts", "InterestExpenseOnBorrowings"],
 }
 INT_INC = {
     "us-gaap": ["InvestmentIncomeInterest", "InterestIncomeOther", "InvestmentIncomeInterestAndDividend",
                 "InterestIncomeOperating"],
     "ifrs-full": ["InterestRevenueCalculatedUsingEffectiveInterestMethod", "InterestIncome", "FinanceIncome"],
+}
+DEBT_FLOWS = {
+    "us-gaap": ["ProceedsFromIssuanceOfLongTermDebt", "RepaymentsOfLongTermDebt", "ProceedsFromLinesOfCredit",
+                "RepaymentsOfLinesOfCredit", "ProceedsFromRepaymentsOfShortTermDebt", "RepaymentsOfDebt",
+                "ProceedsFromIssuanceOfDebt", "ProceedsFromConvertibleDebt", "ProceedsFromNotesPayable",
+                "RepaymentsOfNotesPayable", "ProceedsFromIssuanceOfSeniorLongTermDebt", "RepaymentsOfShortTermDebt",
+                "ProceedsFromShortTermDebt", "ProceedsFromRepaymentsOfLinesOfCredit"],
+    "ifrs-full": ["ProceedsFromBorrowingsClassifiedAsFinancingActivities",
+                  "RepaymentsOfBorrowingsClassifiedAsFinancingActivities"],
 }
 ASSETS = {"us-gaap": ["Assets"], "ifrs-full": ["Assets"]}
 CURRENCY = re.compile(r"^[A-Z]{3}$")
@@ -74,6 +91,11 @@ def univers_us(cfg) -> list[dict]:
                                      "cik": cik, "autres": []})
         if ticker != e["symbol"]:
             e["autres"].append(ticker)
+    for e in par_cik.values():  # privilégier l'action ordinaire (pas de bon de souscription W, unité U, droit R)
+        tous = [e["symbol"]] + e["autres"]
+        tous.sort(key=lambda t: (len(t) == 5 and t[-1] in "WURZ", "-" in t, len(t)))
+        e["symbol"], e["autres"] = tous[0], tous[1:]
+        e["derive_seul"] = len(tous[0]) == 5 and tous[0][-1] in "WURZ"
     return list(par_cik.values())
 
 
@@ -97,6 +119,7 @@ def ajouter_sic(entrees: list[dict], cache_path: Path) -> None:
     for e in entrees:
         sic, desc = cache.get(str(e["cik"]), [None, ""])
         e["sic"], e["sic_desc"] = sic, desc
+        e["sic_connu"] = str(e["cik"]) in cache
 
 
 def telecharger_faits(dest: Path) -> Path:
@@ -121,11 +144,18 @@ def _unites(facts, ns, concept):
     return out
 
 
-def _instant(facts, groupe, jour):
+def _instant(facts, groupe, jour, fenetre=400):
+    """Pour chaque étiquette : valeur à la date du bilan, sinon la plus récente des 400 jours précédents
+    (certaines sociétés ne détaillent leur dette qu'en fin d'exercice). Renvoie le maximum."""
+    limite = (date.fromisoformat(jour) - timedelta(days=fenetre)).isoformat()
     vals = []
     for ns, concepts in groupe.items():
         for c in concepts:
-            vals += [abs(v["val"]) for v in _unites(facts, ns, c) if "start" not in v and v["end"] == jour]
+            faits = [v for v in _unites(facts, ns, c) if "start" not in v and limite <= v["end"] <= jour]
+            if not faits:
+                continue
+            fin = max(v["end"] for v in faits)
+            vals += [abs(v["val"]) for v in faits if v["end"] == fin]
     return max(vals) if vals else None
 
 
@@ -153,13 +183,33 @@ def _periode(facts, groupe, bilan):
     annuels = [v for v in annuels if recent(v)]
     trimestres = [v for v in trimestres if recent(v)]
     if not annuels and not trimestres:
-        return 0.0  # seulement des données anciennes : la société a cessé de déclarer ce poste
+        return None  # seulement des données anciennes : poste inconnu aujourd'hui
     fin_annuel = max((v["end"] for v in annuels), default="")
     montant = max((abs(v["val"]) for v in annuels if v["end"] == fin_annuel), default=0.0)
     suivants = [abs(v["val"]) for v in trimestres if v["end"] > fin_annuel]
     if suivants and max(suivants) > 0:
         montant = max(montant, max(suivants))
     return montant
+
+
+PROFIT = {"us-gaap": ["NetIncomeLoss", "ProfitLoss"], "ifrs-full": ["ProfitLoss"]}
+OCF = {"us-gaap": ["NetCashProvidedByUsedInOperatingActivities"],
+       "ifrs-full": ["CashFlowsFromUsedInOperatingActivities"]}
+REVENUE = {"us-gaap": ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "SalesRevenueNet"],
+           "ifrs-full": ["Revenue"]}
+
+
+def _annuel_signe(facts, groupe, bilan):
+    """Dernier montant annuel (avec son signe), s'il date de moins de 550 jours."""
+    limite = (date.fromisoformat(bilan) - timedelta(days=550)).isoformat()
+    vals = []
+    for ns, concepts in groupe.items():
+        for c in concepts:
+            vals += [v for v in _unites(facts, ns, c)
+                     if "start" in v and 330 <= _jours(v) <= 400 and v["end"] >= limite]
+    if not vals:
+        return None
+    return max(vals, key=lambda v: (v["end"], v.get("filed", "")))["val"]
 
 
 def extraire(cf: dict) -> dict:
@@ -171,14 +221,22 @@ def extraire(cf: dict) -> dict:
     if not actifs:
         return {"error": "aucun bilan dans les données XBRL de la SEC"}
     dernier = max(actifs, key=lambda v: (v["end"], v.get("filed", "")))
+    norme = "ifrs" if "Assets" in facts.get("ifrs-full", {}) and "Assets" not in facts.get("us-gaap", {}) else "us-gaap"
     jour = dernier["end"]
     return {
         "currency": dernier["_unit"],
         "balance_sheet_date": jour,
         "financial_debt": _instant(facts, DEBT, jour) or 0.0,
+        "debt_tagged": _instant(facts, DEBT, jour) is not None,
+        "assets": abs(dernier["val"]),
+        "revenue": _annuel_signe(facts, REVENUE, jour),
+        "net_income": _annuel_signe(facts, PROFIT, jour),
+        "ocf": _annuel_signe(facts, OCF, jour),
         "leases": _instant(facts, LEASES, jour) or 0.0,
         "interest_expense": _periode(facts, INT_EXP, jour),
         "interest_income": _periode(facts, INT_INC, jour),
+        "debt_flows": _periode(facts, DEBT_FLOWS, jour),
+        "norme": norme,
         "error": None,
     }
 

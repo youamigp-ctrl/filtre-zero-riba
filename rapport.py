@@ -83,17 +83,18 @@ def ecrire_rapport(resultats, chg, maintenant, date_prec, notes, cfg, dossier: P
     with open(dossier / "resultats.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["statut", "symbole", "nom", "bourse", "activite", "dette_financiere", "baux",
-                    "interets_verses", "interets_percus", "devise", "date_du_bilan", "source", "verifie_le", "motifs"])
+                    "interets_verses", "interets_percus", "devise", "date_du_bilan", "source", "verifie_le", "profil", "motifs"])
         for r in resultats:
             w.writerow([LABELS[r["status"]], r["symbol"], r["name"], r.get("exchange", ""),
                         r.get("industry") or r.get("sector") or "", r.get("financial_debt"), r.get("leases"),
                         r.get("interest_expense"), r.get("interest_income"), r.get("currency", ""),
                         r.get("balance_sheet_date", ""), r.get("source", ""), r.get("checked", ""),
-                        " ; ".join(r["reasons"])])
+                        r.get("profil", ""), " ; ".join(r["reasons"])])
 
     data = [[r["status"], r["symbol"], r["name"], r.get("exchange", ""), r.get("industry") or r.get("sector") or "",
              r.get("financial_debt"), r.get("leases"), r.get("interest_expense"), r.get("interest_income"),
-             r.get("currency", ""), r.get("balance_sheet_date") or "", r.get("source", ""), " ; ".join(r["reasons"])]
+             r.get("currency", ""), r.get("balance_sheet_date") or "", r.get("source", ""), " ; ".join(r["reasons"]),
+             r.get("profil", "Inconnu")]
             for r in resultats if r["status"] != regles.ATTENTE]
     blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
 
@@ -155,7 +156,8 @@ tbody th a {{ color:var(--ink); font-weight:600; text-decoration-color:var(--rul
 .name {{ display:block; color:var(--muted); font-size:13px; min-width:14ch; max-width:26ch; }}
 .num, thead th.num {{ text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }}
 .num.warn {{ color:var(--warn); font-weight:600; }}
-.sector {{ color:var(--muted); max-width:18ch; }} .date {{ white-space:nowrap; color:var(--muted); font-variant-numeric:tabular-nums; }}
+.sector {{ color:var(--muted); max-width:18ch; }}
+.prof {{ white-space:nowrap; color:var(--muted); font-size:13px; }} .prof.ok {{ color:var(--ok); font-weight:500; }} .date {{ white-space:nowrap; color:var(--muted); font-variant-numeric:tabular-nums; }}
 .reasons {{ font-size:13px; min-width:30ch; max-width:42ch; }}
 .badge {{ display:inline-block; padding:2px 9px; border-radius:999px; font-size:12.5px; font-weight:500; white-space:nowrap; }}
 .badge.conforme {{ background:var(--ok-bg); color:var(--ok); }} .badge.examiner {{ background:var(--warn-bg); color:var(--warn); }}
@@ -192,10 +194,12 @@ footer a {{ color:inherit; }}
       <button type="button" data-f="all" aria-pressed="false">Toutes</button>
     </div>
     <select id="bourse" aria-label="Bourse"><option value="">Toutes les bourses</option>{options}</select>
+    <select id="profil" aria-label="Profil financier"><option value="">Tous les profils</option>
+      <option>Rentable</option><option>Déficitaire</option><option>Sans revenus</option><option>Inconnu</option></select>
     <input type="search" id="q" placeholder="Chercher un symbole, un nom, une activité" aria-label="Chercher">
   </div>
   <div class="table-wrap"><table id="liste">
-    <thead><tr><th>Statut</th><th>Société</th><th>Bourse</th><th>Activité</th>
+    <thead><tr><th>Statut</th><th>Société</th><th>Bourse</th><th>Profil</th><th>Activité</th>
       <th class="num">Dette financière</th><th class="num">Baux</th><th class="num">Intérêts versés</th>
       <th class="num">Intérêts perçus</th><th>Bilan au</th><th>Motifs</th></tr></thead>
     <tbody id="corps"></tbody></table></div>
@@ -207,6 +211,9 @@ footer a {{ color:inherit; }}
   <p>Règles : exclusion des secteurs financiers et des activités illicites, aucune dette financière portant intérêt,
   aucun intérêt versé. Pour les intérêts perçus, les règles actuelles {pol('interest_income_policy')} ; pour les baux,
   elles {pol('lease_policy')}. Montants des 12 derniers mois ou du dernier exercice, en devise de publication.</p>
+  <p>Profil : « Rentable » signifie bénéfice net et flux de trésorerie d’exploitation positifs au dernier exercice.
+  Les conformes américaines sont recoupées avec Yahoo Finance : si l’une des deux sources voit une dette ou des intérêts
+  versés, la société est exclue.</p>
   <p>Les données automatiques peuvent être incomplètes ou erronées : une dette déclarée sous un libellé inhabituel peut
   échapper au filtre. Avant tout achat, vérifiez le bilan et ses notes dans le rapport officiel (SEDAR+ ou EDGAR).
   Ce rapport est un outil de tri : ni conseil financier, ni avis religieux.
@@ -219,6 +226,7 @@ footer a {{ color:inherit; }}
   var D = JSON.parse(document.getElementById("data").textContent);
   var L = {{conforme:"Conforme", examiner:"À examiner", exclu:"Exclue"}};
   var corps = document.getElementById("corps"), plus = document.getElementById("plus"), compte = document.getElementById("compte");
+  var profil = document.getElementById("profil");
   var q = document.getElementById("q"), bourse = document.getElementById("bourse"), boutons = document.querySelectorAll(".seg button");
   var filtre = "conforme", vue = [], montre = 0;
   function argent(v, cur) {{
@@ -240,7 +248,7 @@ footer a {{ color:inherit; }}
                              : "https://finance.yahoo.com/quote/" + encodeURIComponent(r[1]) + "/balance-sheet";
     var n = document.createElement("span"); n.className = "name"; n.textContent = r[2];
     th.appendChild(a); th.appendChild(n); tr.appendChild(th);
-    cell(tr, r[3], "date"); cell(tr, r[4], "sector");
+    cell(tr, r[3], "date"); cell(tr, r[13], "prof " + (r[13] === "Rentable" ? "ok" : "")); cell(tr, r[4], "sector");
     [5,6,7,8].forEach(function (i) {{ cell(tr, argent(r[i], r[9]), "num"); }});
     cell(tr, r[10] || "n.d.", "date"); cell(tr, r[12] || "Aucun motif d’exclusion détecté", "reasons");
     return tr;
@@ -255,14 +263,14 @@ footer a {{ color:inherit; }}
   function appliquer() {{
     var t = q.value.trim().toLowerCase(), b = bourse.value;
     vue = D.filter(function (r) {{
-      return (filtre === "all" || r[0] === filtre) && (!b || r[3] === b) &&
+      return (filtre === "all" || r[0] === filtre) && (!b || r[3] === b) && (!profil.value || r[13] === profil.value) &&
              (!t || (r[1] + " " + r[2] + " " + r[4]).toLowerCase().indexOf(t) !== -1);
     }});
     corps.textContent = ""; montre = 0; afficher(200);
   }}
   boutons.forEach(function (x) {{ x.addEventListener("click", function () {{
     filtre = x.dataset.f; boutons.forEach(function (y) {{ y.setAttribute("aria-pressed", String(y === x)); }}); appliquer(); }}); }});
-  q.addEventListener("input", appliquer); bourse.addEventListener("change", appliquer);
+  q.addEventListener("input", appliquer); bourse.addEventListener("change", appliquer); profil.addEventListener("change", appliquer);
   plus.addEventListener("click", function () {{ afficher(200); }});
   appliquer();
 }})();

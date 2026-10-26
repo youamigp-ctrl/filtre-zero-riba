@@ -88,3 +88,5 @@ interest_tolerance: 0
 #   "exclure"  : lecture stricte  —  "examiner" : vérification manuelle
 interest_income_policy: examiner
 lease_policy: examiner
+# true : seules les sociétés rentables (bénéfice et flux de trésorerie positifs) peuvent être conformes
+exiger_rentabilite: false

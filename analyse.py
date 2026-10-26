@@ -172,7 +172,49 @@ def phase_us(cfg, maintenant, notes) -> list[dict]:
             r = regles.evaluer(d, cfg)
             r["checked"] = maintenant.date().isoformat()
             resultats.append(r)
+
+    verifier_conformes_us(resultats, cfg, notes)
     return resultats
+
+
+def verifier_conformes_us(resultats, cfg, notes):
+    """Second avis de Yahoo Finance sur chaque conforme américaine.
+
+    Les données de la SEC n'incluent pas les étiquettes propres à chaque société : une dette
+    déclarée sous un libellé maison y est invisible. Yahoo normalise ces libellés ; s'il voit
+    une dette ou des intérêts, la société est exclue. Il complète aussi les intérêts perçus.
+    """
+    import source_yahoo
+
+    conformes = [i for i, r in enumerate(resultats) if r["status"] == regles.CONFORME and r.get("source") == "SEC"]
+    print(f"Vérification croisée Yahoo de {len(conformes)} conformes américaines", flush=True)
+    echecs = 0
+    for i in conformes:
+        r = resultats[i]
+        y = source_yahoo.fetch(r["symbol"])
+        time.sleep(cfg.get("request_delay", 1.5))
+        if y.get("error"):
+            echecs += 1
+            r["reasons"] = r["reasons"] + ["Non recoupée avec Yahoo"]
+            if echecs >= cfg.get("echecs_consecutifs_max", 15):
+                notes.append("Vérification croisée interrompue (Yahoo indisponible) : certaines conformes "
+                             "américaines n’ont pas été recoupées.")
+                break
+            continue
+        echecs = 0
+        tol = cfg.get("debt_tolerance", 0)
+        fusion = dict(r)
+        fusion["cross_debt"] = (y.get("financial_debt") or 0) > tol or (y.get("interest_expense") or 0) > tol
+        for k in ("interest_income", "net_income", "ocf", "revenue"):
+            if fusion.get(k) is None and y.get(k) is not None:
+                fusion[k] = y[k]
+        if (y.get("interest_income") or 0) > (fusion.get("interest_income") or 0):
+            fusion["interest_income"] = y["interest_income"]
+        for k in ("status", "reasons", "profil"):
+            fusion.pop(k, None)
+        nouveau = regles.evaluer(fusion, cfg)
+        nouveau["checked"] = r.get("checked")
+        resultats[i] = nouveau
 
 
 # ------------------------------------------------------------------ principal

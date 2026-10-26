@@ -84,6 +84,10 @@ def phase_canada(cfg, maintenant, notes) -> list[dict]:
         if not e["prealable"]:
             a_analyser.append(e["symbol"])
 
+    # À priorité égale, les grandes bourses passent d'abord (le tri de choisir() est stable)
+    rang = {"TSX": 0, "TSXV": 1, "CSE": 2}
+    bourse_de = {e["symbol"]: e["exchange"] for e in entrees}
+    a_analyser.sort(key=lambda s: rang.get(bourse_de[s], 3))
     choix = choisir(a_analyser, cache, maintenant, cfg.get("ca_budget_quotidien", 400))
     print(f"Canada : {len(entrees)} sociétés, {len(a_analyser)} à analyser, {len(choix)} aujourd'hui", flush=True)
     debut, echecs = time.time(), 0

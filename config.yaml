@@ -1,0 +1,88 @@
+# ------------------------------------------------------------------
+# Filtre « zéro riba » v2 — configuration
+# ------------------------------------------------------------------
+
+# ===== Univers =====================================================
+# Canada : déposez les listes officielles dans le dossier listes/
+#   - fichier Excel du Groupe TMX (TSX et Bourse de croissance)
+#   - fichier CSV exporté du site du CSE (le nom doit contenir « cse »)
+# Ajoutez ici les symboles que les listes ratent (actions de catégorie
+# B, par exemple), au format Yahoo : .TO, .V ou .CN
+tickers_supplementaires:
+  - BBD-B.TO
+  - TECK-B.TO
+  - RCI-B.TO
+  - CTC-A.TO
+  - GIB-A.TO
+
+# États-Unis : bourses retenues dans le fichier de la SEC
+us_bourses: [NYSE, Nasdaq]
+
+# ===== Rotation canadienne (Yahoo Finance) =========================
+# Nombre maximal de sociétés canadiennes interrogées par jour
+ca_budget_quotidien: 400
+# Durée maximale de la phase canadienne (minutes)
+ca_minutes_max: 100
+# Pause entre deux sociétés (secondes)
+request_delay: 1.5
+# Arrêt de la phase canadienne après ce nombre d'échecs consécutifs
+# (signe que Yahoo bloque temporairement l'accès)
+echecs_consecutifs_max: 15
+
+# ===== Exclusions avant analyse (économisent des requêtes) =========
+# Secteurs des listes TMX/CSE exclus d'office (comparaison partielle,
+# sans tenir compte des majuscules)
+secteurs_listes_exclus:
+  - Financial Services
+  - Closed-End Funds
+  - ETP
+  - Exchange Traded
+  - SPAC
+  - Capital Pool
+  - Cannabis
+
+# Codes SIC américains exclus d'office (intervalles inclusifs)
+#   6000-6499 : banques, crédit, courtage, assurances
+#   6700-6799 : sociétés de placement, FPI, sociétés-écrans
+#   2082, 2084, 2085 : bière, vin, spiritueux — 2100-2199 : tabac
+sic_exclus:
+  - [6000, 6499]
+  - [6700, 6799]
+  - [2082, 2082]
+  - [2084, 2085]
+  - [2100, 2199]
+
+# Symboles exclus manuellement (jeux de hasard, etc.)
+exclusions_manuelles: []
+
+# ===== Règles appliquées aux données Yahoo =========================
+excluded_sectors:
+  - Financial Services
+excluded_industries:
+  - Banks - Diversified
+  - Banks - Regional
+  - Mortgage Finance
+  - Credit Services
+  - Capital Markets
+  - Asset Management
+  - Financial Conglomerates
+  - Financial Data & Stock Exchanges
+  - Insurance - Life
+  - Insurance - Property & Casualty
+  - Insurance - Diversified
+  - Insurance - Specialty
+  - Insurance - Reinsurance
+  - Insurance Brokers
+  - Shell Companies
+  - Beverages - Brewers
+  - Beverages - Wineries & Distilleries
+  - Tobacco
+  - Gambling
+  - Resorts & Casinos
+
+# ===== Sévérité ====================================================
+debt_tolerance: 0
+interest_tolerance: 0
+#   "exclure"  : lecture stricte  —  "examiner" : vérification manuelle
+interest_income_policy: examiner
+lease_policy: examiner

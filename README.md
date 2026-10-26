@@ -1,0 +1,70 @@
+# Filtre zéro riba — version 2
+
+Chaque jour de semaine, ce programme trie les sociétés cotées accessibles dans un CELI (TSX, Bourse de croissance, CSE, NYSE, Nasdaq) selon trois règles : pas de secteur financier ni d’activité illicite, pas de dette portant intérêt, pas d’intérêt versé. Il publie une page web avec les sociétés conformes, les changements depuis la veille et la qualité des données par bourse.
+
+## Comment ça marche
+
+Les **sociétés américaines** sont analysées toutes, chaque jour, avec les données officielles de la SEC (un seul gros fichier téléchargé, gratuit). Les **sociétés canadiennes** sont analysées avec Yahoo Finance **en rotation** : environ 400 par jour, en commençant par celles jamais vues, puis en revenant trois fois plus souvent sur les conformes, pour repérer vite une nouvelle dette. Les bilans ne changeant qu’une fois par trimestre, un passage complet toutes les une à deux semaines suffit.
+
+Les secteurs exclus d’office (banques, assurances, fonds, alcool, tabac…) sont écartés avant tout téléchargement, ce qui économise des requêtes.
+
+## Plan de déploiement
+
+### Étape 1 — Mise en place (jour 1, environ 30 minutes)
+
+1. Créez un compte sur github.com, puis un dépôt **public** nommé par exemple `filtre-zero-riba` (la page web gratuite l’exige ; elle ne contient aucune donnée personnelle).
+2. Téléversez tout le contenu de ce dossier (« Add file » → « Upload files »), **y compris le dossier caché `.github`** (sur Mac : Cmd+Maj+point pour afficher les fichiers cachés).
+3. Téléchargez les listes officielles et déposez-les dans `listes/` (voir `listes/LISEZMOI.txt`) :
+   - Groupe TMX : répertoire des sociétés inscrites, sur tsx.com (section « Listed Company Directory ») ;
+   - CSE : liste des sociétés exportée depuis thecse.com.
+4. **Settings → Secrets and variables → Actions → New repository secret** : nom `SEC_USER_AGENT`, valeur `FiltreZeroRiba votre@courriel.com`. La SEC exige qu’on s’identifie ; en le mettant en secret, votre courriel n’apparaît nulle part publiquement.
+5. **Settings → Pages** : sous « Source », choisissez **GitHub Actions**.
+6. Onglet **Actions** → « Rapport quotidien » → **Run workflow**.
+
+La première exécution est la plus longue (une à deux heures) : elle récupère une fois pour toutes le secteur de chaque société américaine. L’adresse de votre rapport s’affiche à la fin, sous la forme `https://VOTRE-NOM.github.io/filtre-zero-riba/`.
+
+### Étape 2 — Rodage (semaines 1 et 2)
+
+Le rapport américain est complet dès le premier jour. Le canadien se remplit au fil de la rotation : la colonne « Analysées » de la section *Couverture* montre la progression. Pendant cette période, surveillez deux choses :
+
+- **Les notes en haut du rapport.** Si une liste n’a pas pu être lue, ou si Yahoo a bloqué des requêtes, c’est écrit là. Un blocage occasionnel est normal (la rotation reprend le lendemain) ; s’il revient tous les jours, baissez `ca_budget_quotidien` dans `config.yaml`.
+- **Les symboles introuvables.** Les listes TMX ne donnent souvent que la racine du symbole ; pour les actions de catégorie (BBD-B, CTC-A…), ajoutez-les dans `tickers_supplementaires`.
+
+### Étape 3 — Décision sur les données canadiennes (semaine 3)
+
+Une fois la rotation complète, regardez la colonne **Sans données** de la section *Couverture* :
+
+- Sous 25 % pour une bourse : la version gratuite suffit.
+- Au-delà (en orange), surtout sur la Bourse de croissance et le CSE : un essai d’un mois chez un fournisseur payant comme EODHD, limité à ces sociétés, permettra de mesurer s’il fait vraiment mieux avant de vous engager.
+
+### Étape 4 — Utilisation courante
+
+- **Chaque jour** : consultez la section *Changements*. Une société qui passe de conforme à exclue apparaît en rouge.
+- **Avant tout achat** : vérifiez le bilan et ses notes dans le rapport officiel (SEDAR+ ou EDGAR). Une dette déclarée sous un libellé inhabituel peut échapper à un filtre automatique.
+- **Chaque mois** : remplacez les deux fichiers de `listes/` par leur nouvelle version.
+- **Chaque trimestre** : relisez les règles dans `config.yaml` et l’historique des conformes dans `data/historique/`.
+
+Pour recevoir une notification à chaque rapport, cliquez sur « Watch » en haut du dépôt.
+
+## Réglages (config.yaml)
+
+| Réglage | Effet |
+|---|---|
+| `interest_income_policy`, `lease_policy` | `examiner` (par défaut) ou `exclure` pour la lecture la plus stricte |
+| `ca_budget_quotidien` | sociétés canadiennes interrogées par jour |
+| `secteurs_listes_exclus`, `sic_exclus`, `excluded_industries` | secteurs écartés d’office |
+| `exclusions_manuelles` | symboles à écarter (jeux de hasard, etc.) |
+| `tickers_supplementaires` | symboles absents des listes |
+
+## Lancer sur votre ordinateur
+
+```bash
+pip install -r requirements.txt
+SEC_USER_AGENT="FiltreZeroRiba votre@courriel.com" python analyse.py
+```
+
+Le rapport est créé dans `docs/index.html`.
+
+## Limites
+
+Yahoo Finance est une source gratuite non officielle : elle peut bloquer des requêtes, changer de format ou contenir des erreurs. Les données de la SEC sont officielles mais dépendent de la façon dont chaque société étiquette ses chiffres. Une société listée à la fois au Canada et aux États-Unis peut apparaître deux fois. Ce rapport est un outil de tri : il ne constitue ni un conseil financier, ni un avis religieux.

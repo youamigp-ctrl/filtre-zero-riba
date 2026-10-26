@@ -1,0 +1,8 @@
+Déposez ici, une fois par mois, les listes officielles des sociétés canadiennes :
+
+1. Groupe TMX (TSX et Bourse de croissance) : le fichier Excel du répertoire des
+   sociétés inscrites, tel que téléchargé. Ne le modifiez pas.
+2. CSE : la liste exportée depuis thecse.com (bouton d'export), au format CSV.
+   Le nom du fichier doit contenir « cse », par exemple cse-societes.csv.
+
+Supprimez l'ancienne version quand vous ajoutez la nouvelle.
